@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Calendar from 'react-calendar'; // Make sure the package is installed
-import './Styling/dashboardStyle.css'; // Import your custom styles
+import Calendar from 'react-calendar'; // Make sure this package is installed
+import './Styling/dashboardStyle.css'; // Adjust the path to your custom CSS file
 
 const Dashboard = ({ user }) => {
+    // State variables
     const [date, setDate] = useState(new Date());
     const [availableTimes, setAvailableTimes] = useState([]);
     const [selectedTime, setSelectedTime] = useState('');
@@ -11,7 +12,9 @@ const Dashboard = ({ user }) => {
     const [userName, setUserName] = useState('');
     const [userEmail, setUserEmail] = useState('');
     const [userPhone, setUserPhone] = useState('');
+    const [bookingId, setBookingId] = useState(null);
 
+    // Fetch available times whenever the date changes
     useEffect(() => {
         const fetchAvailableTimes = async () => {
             try {
@@ -32,7 +35,7 @@ const Dashboard = ({ user }) => {
             alert('Please fill in all fields before booking.');
             return;
         }
-
+    
         try {
             const response = await axios.post('http://localhost:5000/api/book-time', {
                 date: date.toDateString(),
@@ -44,10 +47,10 @@ const Dashboard = ({ user }) => {
                     phone: userPhone
                 }
             });
-
+    
             if (response.status === 200) {
+                setBookingId(response.data.bookingId); // Save the booking ID
                 alert('Booking successful');
-                // Optionally reset form fields
                 setSelectedTime('');
                 setService('');
                 setUserName('');
@@ -61,7 +64,27 @@ const Dashboard = ({ user }) => {
             alert('Error making booking. Please try again later.');
         }
     };
-
+    
+    const handleDeleteBooking = async () => {
+        if (!bookingId) {
+            alert('No booking ID available.');
+            return;
+        }
+    
+        try {
+            const response = await axios.delete(`http://localhost:5000/api/book-time/${bookingId}`);
+    
+            if (response.status === 200) {
+                alert('Booking deleted successfully');
+                setBookingId(null); // Clear booking ID
+            } else {
+                alert('Failed to delete booking. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error deleting booking:', error.response || error.message);
+            alert('Error deleting booking. Please try again later.');
+        }
+    };
     
 
     return (
@@ -119,6 +142,9 @@ const Dashboard = ({ user }) => {
                         />
                         <button type="submit">Book Time</button>
                     </form>
+                    {bookingId && (
+                        <button onClick={handleDeleteBooking}>Cancel Booking</button>
+                    )}
                 </div>
             )}
         </div>

@@ -6,7 +6,27 @@ const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
     const [bookings, setBookings] = useState([]);
+    const [bookingId, setBookingId] = useState(null);
 
+    
+
+    const handleBooking = async () => {
+        // Logic to create booking...
+        try {
+            const response = await axios.post('http://localhost:5000/api/book-time', {/* booking data */});
+            if (response.status === 200) {
+                setBookingId(response.data.bookingId);
+                alert('Booking successful');
+            } else {
+                alert('Failed to book time. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error making booking:', error.response || error.message);
+            alert('Error making booking. Please try again later.');
+        }
+    };
+
+    
 
     useEffect(() => {
         if (selectedDate) {
@@ -53,6 +73,29 @@ const AdminDashboard = () => {
         }
     };
 
+    // Function to handle booking deletion
+    const handleDeleteBooking = async () => {
+        if (!bookingId) {
+            console.log('Booking ID:', bookingId); // Debugging statement
+            alert('No booking ID provided.');
+            return;
+        }
+
+        try {
+            const response = await axios.delete(`http://localhost:5000/api/book-time/${bookingId}`);
+            if (response.status === 200) {
+                alert('Booking deleted successfully');
+                setBookingId(null); // Clear booking ID
+            } else {
+                alert('Failed to delete booking. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error deleting booking:', error.response || error.message);
+            alert('Error deleting booking. Please try again later.');
+        }
+    };
+    
+
     const handleDeleteTimes = async (timesToDelete) => {
         if (selectedDate) {
             try {
@@ -77,6 +120,7 @@ const AdminDashboard = () => {
 
         try {
             await axios.delete(`http://localhost:5000/api/delete-booking/${bookingId}`);
+
             setBookings(prevBookings => prevBookings.filter(booking => booking._id !== bookingId));
             alert('Booking deleted successfully');
         } catch (error) {
@@ -130,7 +174,7 @@ const AdminDashboard = () => {
                                 <td>{booking.userEmail}</td>
                                 <td>{booking.userPhone}</td>
                                 <td>
-                                    <button onClick={() => handleDelete(booking._id)}>Delete</button>
+                                <button onClick={() => handleDelete(booking._id)}>Cancel Booking</button>
                                 </td>
                             </tr>
                         ))}
