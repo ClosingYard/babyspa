@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import './Navbar.css';
 
 function Navbar({ user, setUser }) {
+    console.log('Navbar user:', user); // Log user object to check
+
     const handleLogout = () => {
         localStorage.removeItem('token');
-        setUser(null); // Ensure setUser is available here
+        setUser(null);
     };
 
     return (
@@ -16,8 +18,9 @@ function Navbar({ user, setUser }) {
             <ul className="right-nav">
                 {user ? (
                     <>
+                        <li><Link to="/dashboard">Dashboard</Link></li>
                         {user.role === 'admin' && <li><Link to="/admin">Admin Dashboard</Link></li>}
-                        {user.role === 'user' && <li><Link to="/user">Dashboard</Link></li>}
+                        <li>Hello, {user.firstName}</li> {/* Display user's first name */}
                         <li><button onClick={handleLogout}>Logout</button></li>
                     </>
                 ) : (

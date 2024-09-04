@@ -13,7 +13,8 @@ function Login({ setUser }) {
             const response = await axios.post('http://localhost:5000/api/login', { email, password });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
-            setUser(user); // Update user state here
+            console.log('Logged in user:', user); // Log user object
+            setUser(user); // Ensure user object includes firstName
         } catch (err) {
             setError('Invalid email or password');
         }

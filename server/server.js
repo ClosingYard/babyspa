@@ -8,8 +8,8 @@ app.use(express.json());
 app.use(cors());
 
 const users = [
-    { email: 'user@example.com', password: bcrypt.hashSync('userpassword', 10), role: 'user' },
-    { email: 'admin@example.com', password: bcrypt.hashSync('adminpassword', 10), role: 'admin' },
+    { email: 'user@example.com', password: bcrypt.hashSync('userpassword', 10), role: 'user', firstName: 'Costomer' },
+    { email: 'admin@example.com', password: bcrypt.hashSync('adminpassword', 10), role: 'admin', firstName: 'Administrator' },
 ];
 
 const SECRET_KEY = 'your_secret_key';
@@ -20,7 +20,14 @@ app.post('/api/login', (req, res) => {
 
     if (user && bcrypt.compareSync(password, user.password)) {
         const token = jwt.sign({ email: user.email, role: user.role }, SECRET_KEY);
-        res.json({ user, token });
+        res.json({ 
+            user: {
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName // Ensure firstName is included here
+            },
+            token
+        });
     } else {
         res.status(401).send('Invalid credentials');
     }
