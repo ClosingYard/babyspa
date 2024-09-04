@@ -1,61 +1,126 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Calendar from 'react-calendar'; // Install this package for calendar UI
+import Calendar from 'react-calendar'; // Make sure the package is installed
+import './Styling/dashboardStyle.css'; // Import your custom styles
 
 const Dashboard = ({ user }) => {
     const [date, setDate] = useState(new Date());
     const [availableTimes, setAvailableTimes] = useState([]);
     const [selectedTime, setSelectedTime] = useState('');
     const [service, setService] = useState('');
+    const [userName, setUserName] = useState('');
+    const [userEmail, setUserEmail] = useState('');
+    const [userPhone, setUserPhone] = useState('');
 
     useEffect(() => {
         const fetchAvailableTimes = async () => {
-            const res = await axios.get('http://localhost:5000/api/get-times', { params: { date: date.toISOString().split('T')[0] } });
-            setAvailableTimes(res.data.times);
+            try {
+                const res = await axios.get('http://localhost:5000/api/get-times', {
+                    params: { date: date.toDateString() }
+                });
+                setAvailableTimes(res.data.times || []);
+            } catch (error) {
+                console.error('Error fetching available times:', error);
+            }
         };
 
         fetchAvailableTimes();
     }, [date]);
 
     const handleBooking = async () => {
+        if (!selectedTime || !service || !userName || !userEmail || !userPhone) {
+            alert('Please fill in all fields before booking.');
+            return;
+        }
+
         try {
-            await axios.post('/api/book-time', {
-                date: date.toISOString().split('T')[0],
+            const response = await axios.post('http://localhost:5000/api/book-time', {
+                date: date.toDateString(),
                 time: selectedTime,
                 service,
-                user
+                user: {
+                    name: userName,
+                    email: userEmail,
+                    phone: userPhone
+                }
             });
-            alert('Booking successful');
+
+            if (response.status === 200) {
+                alert('Booking successful');
+                // Optionally reset form fields
+                setSelectedTime('');
+                setService('');
+                setUserName('');
+                setUserEmail('');
+                setUserPhone('');
+            } else {
+                alert('Failed to book time. Please try again.');
+            }
         } catch (error) {
-            console.error('Error making booking:', error);
-            alert('Error making booking');
+            console.error('Error making booking:', error.response || error.message);
+            alert('Error making booking. Please try again later.');
         }
     };
+
+    
 
     return (
         <div>
             <h1>Dashboard</h1>
-            <Calendar
-                onChange={setDate}
-                value={date}
-            />
+            <Calendar onChange={setDate} value={date} />
             <div>
-                <h2>Available Times</h2>
-                <ul>
-                    {availableTimes.map((time, index) => (
-                        <li key={index}>
-                            <button onClick={() => setSelectedTime(time)}>{time}</button>
-                        </li>
-                    ))}
-                </ul>
-                <input
-                    type="text"
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
-                    placeholder="Enter service"
-                />
-                <button onClick={handleBooking}>Book Time</button>
+                <h2>Available Times for {date.toDateString()}</h2>
+                {availableTimes.length > 0 ? (
+                    <ul>
+                        {availableTimes.map((time, index) => (
+                            <li key={index}>
+                                <button onClick={() => setSelectedTime(time)}>{time}</button>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>No available times for the selected date.</p>
+                )}
             </div>
+            {selectedTime && (
+                <div>
+                    <h3>Book a Reservation for {selectedTime} on {date.toDateString()}</h3>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        handleBooking();
+                    }}>
+                        <input
+                            type="text"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            placeholder="Enter your name"
+                            required
+                        />
+                        <input
+                            type="email"
+                            value={userEmail}
+                            onChange={(e) => setUserEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            required
+                        />
+                        <input
+                            type="tel"
+                            value={userPhone}
+                            onChange={(e) => setUserPhone(e.target.value)}
+                            placeholder="Enter your phone number"
+                            required
+                        />
+                        <input
+                            type="text"
+                            value={service}
+                            onChange={(e) => setService(e.target.value)}
+                            placeholder="Enter service"
+                            required
+                        />
+                        <button type="submit">Book Time</button>
+                    </form>
+                </div>
+            )}
         </div>
     );
 };

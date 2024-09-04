@@ -7,6 +7,7 @@ const AdminDashboard = () => {
     const [availableTimes, setAvailableTimes] = useState([]);
     const [bookings, setBookings] = useState([]);
 
+
     useEffect(() => {
         if (selectedDate) {
             const fetchTimes = async () => {
@@ -30,7 +31,7 @@ const AdminDashboard = () => {
                 const response = await axios.get('http://localhost:5000/api/get-bookings');
                 setBookings(response.data || []);
             } catch (error) {
-                console.error('Failed to fetch bookings:', error);
+                console.error('Error fetching bookings:', error);
             }
         };
 
@@ -44,7 +45,8 @@ const AdminDashboard = () => {
                     date: selectedDate.toDateString(),
                     times
                 });
-                setAvailableTimes(times);
+                // Update the available times state to include the newly saved times
+                setAvailableTimes((prevTimes) => [...prevTimes, ...times]);
             } catch (error) {
                 console.error('Failed to save times:', error);
             }
@@ -60,13 +62,29 @@ const AdminDashboard = () => {
                         timesToDelete
                     }
                 });
-                setAvailableTimes(availableTimes.filter(time => !timesToDelete.includes(time)));
+                // Update the available times state to remove the deleted times
+                setAvailableTimes((prevTimes) => prevTimes.filter(time => !timesToDelete.includes(time)));
             } catch (error) {
                 console.error('Failed to delete times:', error);
             }
         }
     };
+    const handleDelete = async (bookingId) => {
+        if (!bookingId) {
+            console.error('No booking ID provided');
+            return;
+        }
 
+        try {
+            await axios.delete(`http://localhost:5000/api/delete-booking/${bookingId}`);
+            setBookings(prevBookings => prevBookings.filter(booking => booking._id !== bookingId));
+            alert('Booking deleted successfully');
+        } catch (error) {
+            console.error('Error deleting booking:', error);
+            alert('Error deleting booking');
+        }
+    };
+    
     return (
         <div>
             <h1>Admin Dashboard</h1>
@@ -89,27 +107,31 @@ const AdminDashboard = () => {
                 </div>
             )}
             <div>
-                <h2>Bookings</h2>
+            <h2>All Bookings</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Time</th>
                             <th>Service</th>
-                            <th>User Email</th>
                             <th>User Name</th>
+                            <th>User Email</th>
                             <th>User Phone</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {bookings.map((booking, index) => (
-                            <tr key={index}>
+                        {bookings.map((booking) => (
+                            <tr key={booking._id}>
                                 <td>{booking.date}</td>
                                 <td>{booking.time}</td>
                                 <td>{booking.service}</td>
-                                <td>{booking.userEmail}</td>
                                 <td>{booking.userName}</td>
+                                <td>{booking.userEmail}</td>
                                 <td>{booking.userPhone}</td>
+                                <td>
+                                    <button onClick={() => handleDelete(booking._id)}>Delete</button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -139,6 +161,7 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes }) => {
 
     const handleSave = () => {
         onSaveTimes(times);
+        setTimes([]); // Clear the times input after saving
     };
 
     return (
@@ -152,6 +175,14 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes }) => {
                 placeholder="Time to delete"
             />
             <button onClick={handleDeleteTimes}>Delete Time</button>
+            <div>
+                <h4>Times to Save</h4>
+                <ul>
+                    {times.map((time, index) => (
+                        <li key={index}>{time}</li>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 };

@@ -17,6 +17,7 @@ const users = [
 
 const SECRET_KEY = 'your_secret_key';
 
+
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     const user = users.find(u => u.email === email);
@@ -44,21 +45,28 @@ app.post('/api/save-times', async (req, res) => {
 
 app.post('/api/book-time', async (req, res) => {
     const { date, time, service, user } = req.body;
+
+    if (!date || !time || !service || !user.name || !user.email || !user.phone) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
     try {
-        await Booking.create({
+        const newBooking = await Booking.create({
             date,
             time,
             service,
+            userName: user.name,
             userEmail: user.email,
-            userName: user.firstName,
             userPhone: user.phone
         });
-        res.send('Booking successful');
+
+        res.status(200).json({ message: 'Booking successful', booking: newBooking });
     } catch (error) {
-        console.error('Error making booking:', error);
-        res.status(500).send('Error making booking');
+        console.error('Error saving booking:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 app.get('/api/get-bookings', async (req, res) => {
     try {
@@ -91,6 +99,32 @@ app.delete('/api/delete-times', async (req, res) => {
         res.status(500).send('Error deleting times');
     }
 });
+
+app.delete('/api/delete-booking/:id', async (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
+        console.error('Error: Booking ID is required');
+        return res.status(400).json({ error: 'Booking ID is required' });
+    }
+
+    try {
+        const result = await Booking.findByIdAndDelete(id);
+
+        if (!result) {
+            console.error('Error: Booking not found');
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        res.status(200).json({ message: 'Booking deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting booking:', error); // Log the actual error
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
 
 app.get('/api/verify', (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
