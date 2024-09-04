@@ -1,23 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import axios from 'axios'; // Import axios for API requests
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 
+
 function App() {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            // Here you would verify the token and fetch user details from the server
-            // For simplicity, we'll assume the token is valid and set a dummy user role
-            setUser({ role: 'user' }); // Replace this with actual user role retrieval
-        } else {
-            setUser(null); // Ensure user is null if no token is present
-        }
+        const fetchUser = async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const response = await axios.get('http://localhost:5000/api/verify', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setUser(response.data.user);
+                } catch (error) {
+                    localStorage.removeItem('token');
+                    setUser(null);
+                }
+            }
+        };
+
+        fetchUser();
     }, []);
 
     const PrivateRoute = ({ element }) => (
