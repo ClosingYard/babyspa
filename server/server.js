@@ -2,6 +2,9 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const sequelize = require('./database');
+const AvailableTime = require('./models/AvailableTime');
+const Booking = require('./models/booking')
 
 const app = express();
 app.use(express.json());
@@ -11,8 +14,6 @@ const users = [
     { email: 'user@example.com', password: bcrypt.hashSync('userpassword', 10), role: 'user', firstName: 'John' },
     { email: 'admin@example.com', password: bcrypt.hashSync('adminpassword', 10), role: 'admin', firstName: 'Admin' },
 ];
-
-const availableTimes = {}; // Store times in memory for simplicity
 
 const SECRET_KEY = 'your_secret_key';
 
@@ -28,24 +29,66 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-app.post('/api/save-times', (req, res) => {
+app.post('/api/save-times', async (req, res) => {
     const { date, times } = req.body;
-    availableTimes[date] = times;
-    res.send('Times saved');
+    try {
+        await AvailableTime.destroy({ where: { date } });
+        const entries = times.map(time => ({ date, time }));
+        await AvailableTime.bulkCreate(entries);
+        res.send('Times saved');
+    } catch (error) {
+        console.error('Error saving times:', error);
+        res.status(500).send('Error saving times');
+    }
 });
 
-app.get('/api/get-times', (req, res) => {
+app.post('/api/book-time', async (req, res) => {
+    const { date, time, service, user } = req.body;
+    try {
+        await Booking.create({
+            date,
+            time,
+            service,
+            userEmail: user.email,
+            userName: user.firstName,
+            userPhone: user.phone
+        });
+        res.send('Booking successful');
+    } catch (error) {
+        console.error('Error making booking:', error);
+        res.status(500).send('Error making booking');
+    }
+});
+
+app.get('/api/get-bookings', async (req, res) => {
+    try {
+        const bookings = await Booking.findAll();
+        res.json(bookings);
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        res.status(500).send('Error fetching bookings');
+    }
+});
+
+app.get('/api/get-times', async (req, res) => {
     const { date } = req.query;
-    res.json({ times: availableTimes[date] || [] });
+    try {
+        const times = await AvailableTime.findAll({ where: { date } });
+        res.json({ times: times.map(t => t.time) });
+    } catch (error) {
+        console.error('Error fetching times:', error);
+        res.status(500).send('Error fetching times');
+    }
 });
 
-app.delete('/api/delete-times', (req, res) => {
+app.delete('/api/delete-times', async (req, res) => {
     const { date, timesToDelete } = req.body;
-    if (availableTimes[date]) {
-        availableTimes[date] = availableTimes[date].filter(time => !timesToDelete.includes(time));
+    try {
+        await AvailableTime.destroy({ where: { date, time: timesToDelete } });
         res.send('Times deleted');
-    } else {
-        res.status(404).send('Date not found');
+    } catch (error) {
+        console.error('Error deleting times:', error);
+        res.status(500).send('Error deleting times');
     }
 });
 
@@ -63,7 +106,9 @@ app.get('/api/verify', (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+sequelize.sync().then(() => {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
 });

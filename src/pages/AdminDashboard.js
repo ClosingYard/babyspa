@@ -5,6 +5,7 @@ import axios from 'axios';
 const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
+    const [bookings, setBookings] = useState([]);
 
     useEffect(() => {
         if (selectedDate) {
@@ -22,6 +23,19 @@ const AdminDashboard = () => {
             fetchTimes();
         }
     }, [selectedDate]);
+
+    useEffect(() => {
+        const fetchBookings = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/get-bookings');
+                setBookings(response.data || []);
+            } catch (error) {
+                console.error('Failed to fetch bookings:', error);
+            }
+        };
+
+        fetchBookings();
+    }, []);
 
     const handleSaveTimes = async (times) => {
         if (selectedDate) {
@@ -74,11 +88,36 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+            <div>
+                <h2>Bookings</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Service</th>
+                            <th>User Email</th>
+                            <th>User Name</th>
+                            <th>User Phone</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {bookings.map((booking, index) => (
+                            <tr key={index}>
+                                <td>{booking.date}</td>
+                                <td>{booking.time}</td>
+                                <td>{booking.service}</td>
+                                <td>{booking.userEmail}</td>
+                                <td>{booking.userName}</td>
+                                <td>{booking.userPhone}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
-
-// Existing `AdminDashboard` and `AvailableTimesForm` components
 
 const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes }) => {
     const [times, setTimes] = useState([]);
@@ -118,4 +157,3 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes }) => {
 };
 
 export default AdminDashboard;
-
