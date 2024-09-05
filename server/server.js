@@ -4,20 +4,21 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const sequelize = require('./database');
 const AvailableTime = require('./models/AvailableTime');
-const Booking = require('./models/booking')
+const Booking = require('./models/Booking');
+const TimeTemplate = require('./models/TimeTemplate'); // Import the new model
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors()); // This should allow requests from other origins
 
 const users = [
-    { email: 'user@example.com', password: bcrypt.hashSync('userpassword', 10), role: 'user', firstName: 'John' },
+    { email: 'user@example.com', password: bcrypt.hashSync('userpassword', 10), role: 'user', firstName: '' },
     { email: 'admin@example.com', password: bcrypt.hashSync('adminpassword', 10), role: 'admin', firstName: 'Admin' },
 ];
 
 const SECRET_KEY = 'your_secret_key';
 
-
+// Login route
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     const user = users.find(u => u.email === email);
@@ -30,6 +31,7 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// Save available times route
 app.post('/api/save-times', async (req, res) => {
     const { date, times } = req.body;
     try {
@@ -43,6 +45,7 @@ app.post('/api/save-times', async (req, res) => {
     }
 });
 
+// Book time route
 app.post('/api/book-time', async (req, res) => {
     const { date, time, service, user } = req.body;
 
@@ -67,7 +70,7 @@ app.post('/api/book-time', async (req, res) => {
     }
 });
 
-
+// Get bookings route
 app.get('/api/get-bookings', async (req, res) => {
     try {
         const bookings = await Booking.findAll();
@@ -78,7 +81,7 @@ app.get('/api/get-bookings', async (req, res) => {
     }
 });
 
-
+// Get available times route
 app.get('/api/get-times', async (req, res) => {
     const { date } = req.query;
     try {
@@ -90,6 +93,7 @@ app.get('/api/get-times', async (req, res) => {
     }
 });
 
+// Delete available times route
 app.delete('/api/delete-times', async (req, res) => {
     const { date, timesToDelete } = req.body;
     try {
@@ -101,6 +105,7 @@ app.delete('/api/delete-times', async (req, res) => {
     }
 });
 
+// Delete booking route
 app.delete('/api/delete-booking/:id', async (req, res) => {
     const { id } = req.params; // Ensure it's "id" and not "_id"
     
@@ -124,9 +129,42 @@ app.delete('/api/delete-booking/:id', async (req, res) => {
     }
 });
 
+// Save time template route
+app.post('/api/save-template', async (req, res) => {
+    const { name, times } = req.body;
+    try {
+        await TimeTemplate.create({ name, times });
+        res.status(201).send('Template saved');
+    } catch (error) {
+        console.error('Error saving template:', error);
+        res.status(500).send('Error saving template');
+    }
+});
 
+// Get time templates route
+app.get('/api/get-templates', async (req, res) => {
+    try {
+        const templates = await TimeTemplate.findAll();
+        res.json(templates.map(t => ({ name: t.name, times: t.times })));
+    } catch (error) {
+        console.error('Error fetching templates:', error);
+        res.status(500).send('Error fetching templates');
+    }
+});
 
+// Delete time template route
+app.delete('/api/delete-template', async (req, res) => {
+    const { name } = req.body;
+    try {
+        await TimeTemplate.destroy({ where: { name } });
+        res.send('Template deleted');
+    } catch (error) {
+        console.error('Error deleting template:', error);
+        res.status(500).send('Error deleting template');
+    }
+});
 
+// Verify route
 app.get('/api/verify', (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
 

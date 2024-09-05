@@ -1,9 +1,48 @@
+/* Navbar.css */
 nav {
     background-color: #333;
     padding: 10px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.nav-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.logo a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.hello-prompt {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.profile-link {
+    display: none; /* Hide by default (for desktop) */
+}
+
+.mobile-menu-button {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    margin-left: auto;
 }
 
 ul {
@@ -13,23 +52,74 @@ ul {
     display: flex;
 }
 
-.left-nav {
-    margin-left: 0;
+.nav-menu {
+    display: flex;
+    margin-left: auto;
 }
 
-.right-nav {
-    margin-right: 0;
-}
-
-li {
+.nav-menu li {
     margin-left: 10px;
+    color: white;
 }
 
-a {
+.nav-menu a {
     color: white;
     text-decoration: none;
 }
 
-a:hover {
+.nav-menu a:hover {
     text-decoration: underline;
+}
+
+.logout-button {
+    background: none;
+    border-radius: 25%;
+    color: white;
+    cursor: pointer;
+    background-color: red;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .nav-menu {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        right: 10px;
+        background-color: #333;
+        width: 200px;
+        border: 1px solid #444;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-menu.open {
+        display: flex;
+    }
+
+    .nav-menu li {
+        margin-left: 0;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .mobile-menu-button {
+        display: block;
+    }
+
+    .profile-link {
+        display: block; /* Show on mobile */
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center; /* Center text */
+        position: absolute; /* Position absolutely */
+        top: 10px; /* Adjust top position as needed */
+        left: 50%; /* Center horizontally */
+        transform: translateX(-50%); /* Offset left by half of its width */
+    }
+
+    .invisible-for-mobile {
+        display: none;
+    }
 }
