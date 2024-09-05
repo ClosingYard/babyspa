@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import CalendarComponent from '../components/CalendarComponent';
 import axios from 'axios';
 
+import './Styling/adminDashboard.css'
+import AvailableTimesForm from '../components/AvailableTimesForm';
 const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
     const [bookings, setBookings] = useState([]);
+    const [showTimesForm, setShowTimesForm] = useState(false);
 
     useEffect(() => {
         if (selectedDate) {
@@ -74,7 +77,6 @@ const AdminDashboard = () => {
         }
 
         try {
-            console.log('Deleting booking with ID:', bookingId); // Debug
             await axios.delete(`http://localhost:5000/api/delete-booking/${bookingId}`);
             setBookings((prevBookings) => prevBookings.filter((booking) => booking.id !== bookingId));
             alert('Booking deleted successfully');
@@ -85,112 +87,65 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div>
-            <h1>Admin Dashboard</h1>
+        <div className="container">
+            <h1 className="heading">Admin Dashboard</h1>
             <CalendarComponent setSelectedDate={setSelectedDate} />
+
             {selectedDate && (
-                <div>
-                    <h2>Set Available Times for {selectedDate.toDateString()}</h2>
-                    <AvailableTimesForm onSaveTimes={handleSaveTimes} onDeleteTimes={handleDeleteTimes} />
-                    <div>
-                        <h3>Existing Times</h3>
-                        <ul>
-                            {availableTimes.map((time, index) => (
-                                <li key={index}>
-                                    {time}
-                                    <button onClick={() => handleDeleteTimes([time])}>Delete</button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                <div className="section">
+                    <h2 className="subHeading">Manage Times for {selectedDate.toDateString()}</h2>
+                    <button className="dropdown-toggle" onClick={() => setShowTimesForm(!showTimesForm)}>
+                        {showTimesForm ? 'Hide Form' : 'Show Form'}
+                    </button>
+                    {showTimesForm && (
+                        <AvailableTimesForm
+                            onSaveTimes={handleSaveTimes}
+                            onDeleteTimes={handleDeleteTimes}
+                            availableTimes={availableTimes}
+                        />
+                    )}
                 </div>
             )}
-            <div>
-                <h2>All Bookings</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Service</th>
-                            <th>User Name</th>
-                            <th>User Email</th>
-                            <th>User Phone</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {bookings.map((booking) => (
-                            <tr key={booking.id}>
-                                <td>{booking.date}</td>
-                                <td>{booking.time}</td>
-                                <td>{booking.service}</td>
-                                <td>{booking.userName}</td>
-                                <td>{booking.userEmail}</td>
-                                <td>{booking.userPhone}</td>
-                                <td>
-                                    <button
-                                        onClick={() => {
-                                            console.log('Booking ID:', booking.id); // Debugging to see if id is correct
-                                            handleDeleteBooking(booking.id); // Passing the correct ID
-                                        }}
-                                    >
-                                        Cancel Booking
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+
+            <div className="section">
+                <h2 className="subHeading">All Bookings</h2>
+                <BookingsTable bookings={bookings} onDeleteBooking={handleDeleteBooking} />
             </div>
         </div>
     );
 };
 
-const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes }) => {
-    const [times, setTimes] = useState([]);
-    const [timeToDelete, setTimeToDelete] = useState('');
-
-    const handleAddTime = () => {
-        const time = prompt('Enter available time (e.g., 09:00 AM)');
-        if (time) {
-            setTimes([...times, time]);
-        }
-    };
-
-    const handleDeleteTimes = () => {
-        if (timeToDelete) {
-            onDeleteTimes([timeToDelete]);
-            setTimeToDelete('');
-        }
-    };
-
-    const handleSave = () => {
-        onSaveTimes(times);
-        setTimes([]); // Clear the times input after saving
-    };
-
-    return (
-        <div>
-            <button onClick={handleAddTime}>Add Time</button>
-            <button onClick={handleSave}>Save Times</button>
-            <input
-                type="text"
-                value={timeToDelete}
-                onChange={(e) => setTimeToDelete(e.target.value)}
-                placeholder="Time to delete"
-            />
-            <button onClick={handleDeleteTimes}>Delete Time</button>
-            <div>
-                <h4>Times to Save</h4>
-                <ul>
-                    {times.map((time, index) => (
-                        <li key={index}>{time}</li>
-                    ))}
-                </ul>
-            </div>
-        </div>
-    );
-};
+const BookingsTable = ({ bookings, onDeleteBooking }) => (
+    <table className="table">
+        <thead>
+            <tr>
+                <th className="th">Date</th>
+                <th className="th">Time</th>
+                <th className="th">Service</th>
+                <th className="th">User Name</th>
+                <th className="th">User Email</th>
+                <th className="th">User Phone</th>
+                <th className="th">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {bookings.map((booking) => (
+                <tr key={booking.id} className="tr">
+                    <td className="td">{booking.date}</td>
+                    <td className="td">{booking.time}</td>
+                    <td className="td">{booking.service}</td>
+                    <td className="td">{booking.userName}</td>
+                    <td className="td">{booking.userEmail}</td>
+                    <td className="td">{booking.userPhone}</td>
+                    <td className="td">
+                        <button className="delete-button" onClick={() => onDeleteBooking(booking.id)}>
+                            Cancel Booking
+                        </button>
+                    </td>
+                </tr>
+            ))}
+        </tbody>
+    </table>
+);
 
 export default AdminDashboard;
