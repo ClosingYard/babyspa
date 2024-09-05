@@ -78,6 +78,7 @@ app.get('/api/get-bookings', async (req, res) => {
     }
 });
 
+
 app.get('/api/get-times', async (req, res) => {
     const { date } = req.query;
     try {
@@ -101,24 +102,24 @@ app.delete('/api/delete-times', async (req, res) => {
 });
 
 app.delete('/api/delete-booking/:id', async (req, res) => {
-    const { id } = req.params;
-
+    const { id } = req.params; // Ensure it's "id" and not "_id"
+    
     if (!id) {
-        console.error('Error: Booking ID is required');
         return res.status(400).json({ error: 'Booking ID is required' });
     }
-
+    
     try {
-        const result = await Booking.findByIdAndDelete(id);
+        const result = await Booking.destroy({
+            where: { id } // Ensure it's "id" here as well
+        });
 
         if (!result) {
-            console.error('Error: Booking not found');
             return res.status(404).json({ error: 'Booking not found' });
         }
 
         res.status(200).json({ message: 'Booking deleted successfully' });
     } catch (error) {
-        console.error('Error deleting booking:', error); // Log the actual error
+        console.error('Error deleting booking:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

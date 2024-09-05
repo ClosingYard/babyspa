@@ -6,27 +6,6 @@ const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
     const [bookings, setBookings] = useState([]);
-    const [bookingId, setBookingId] = useState(null);
-
-    
-
-    const handleBooking = async () => {
-        // Logic to create booking...
-        try {
-            const response = await axios.post('http://localhost:5000/api/book-time', {/* booking data */});
-            if (response.status === 200) {
-                setBookingId(response.data.bookingId);
-                alert('Booking successful');
-            } else {
-                alert('Failed to book time. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error making booking:', error.response || error.message);
-            alert('Error making booking. Please try again later.');
-        }
-    };
-
-    
 
     useEffect(() => {
         if (selectedDate) {
@@ -65,36 +44,12 @@ const AdminDashboard = () => {
                     date: selectedDate.toDateString(),
                     times
                 });
-                // Update the available times state to include the newly saved times
                 setAvailableTimes((prevTimes) => [...prevTimes, ...times]);
             } catch (error) {
                 console.error('Failed to save times:', error);
             }
         }
     };
-
-    // Function to handle booking deletion
-    const handleDeleteBooking = async () => {
-        if (!bookingId) {
-            console.log('Booking ID:', bookingId); // Debugging statement
-            alert('No booking ID provided.');
-            return;
-        }
-
-        try {
-            const response = await axios.delete(`http://localhost:5000/api/book-time/${bookingId}`);
-            if (response.status === 200) {
-                alert('Booking deleted successfully');
-                setBookingId(null); // Clear booking ID
-            } else {
-                alert('Failed to delete booking. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error deleting booking:', error.response || error.message);
-            alert('Error deleting booking. Please try again later.');
-        }
-    };
-    
 
     const handleDeleteTimes = async (timesToDelete) => {
         if (selectedDate) {
@@ -105,30 +60,30 @@ const AdminDashboard = () => {
                         timesToDelete
                     }
                 });
-                // Update the available times state to remove the deleted times
                 setAvailableTimes((prevTimes) => prevTimes.filter(time => !timesToDelete.includes(time)));
             } catch (error) {
                 console.error('Failed to delete times:', error);
             }
         }
     };
-    const handleDelete = async (bookingId) => {
+
+    const handleDeleteBooking = async (bookingId) => {
         if (!bookingId) {
             console.error('No booking ID provided');
             return;
         }
 
         try {
+            console.log('Deleting booking with ID:', bookingId); // Debug
             await axios.delete(`http://localhost:5000/api/delete-booking/${bookingId}`);
-
-            setBookings(prevBookings => prevBookings.filter(booking => booking._id !== bookingId));
+            setBookings((prevBookings) => prevBookings.filter((booking) => booking.id !== bookingId));
             alert('Booking deleted successfully');
         } catch (error) {
             console.error('Error deleting booking:', error);
             alert('Error deleting booking');
         }
     };
-    
+
     return (
         <div>
             <h1>Admin Dashboard</h1>
@@ -151,7 +106,7 @@ const AdminDashboard = () => {
                 </div>
             )}
             <div>
-            <h2>All Bookings</h2>
+                <h2>All Bookings</h2>
                 <table>
                     <thead>
                         <tr>
@@ -166,7 +121,7 @@ const AdminDashboard = () => {
                     </thead>
                     <tbody>
                         {bookings.map((booking) => (
-                            <tr key={booking._id}>
+                            <tr key={booking.id}>
                                 <td>{booking.date}</td>
                                 <td>{booking.time}</td>
                                 <td>{booking.service}</td>
@@ -174,7 +129,14 @@ const AdminDashboard = () => {
                                 <td>{booking.userEmail}</td>
                                 <td>{booking.userPhone}</td>
                                 <td>
-                                <button onClick={() => handleDelete(booking._id)}>Cancel Booking</button>
+                                    <button
+                                        onClick={() => {
+                                            console.log('Booking ID:', booking.id); // Debugging to see if id is correct
+                                            handleDeleteBooking(booking.id); // Passing the correct ID
+                                        }}
+                                    >
+                                        Cancel Booking
+                                    </button>
                                 </td>
                             </tr>
                         ))}
