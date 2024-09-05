@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Availabletimesform.css';
-import './Navbar.css';
+import './AvailableTimesForm.css';
 
 const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
     const [times, setTimes] = useState([]);
@@ -63,82 +62,89 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
 
     return (
         <div className="times-form">
-            <div className="form-group">
-                <input
-                    type="text"
-                    value={timeInput}
-                    onChange={(e) => setTimeInput(e.target.value)}
-                    placeholder="Enter available time (e.g., 09:00 AM)"
-                    className="input"
-                />
-                <button className="add-button" onClick={handleAddTime}>Add Time</button>
-                <button className="save-button" onClick={handleSave}>Save Times</button>
+            <div className="left-side">
+                <div className="form-group">
+                    <input
+                        type="text"
+                        value={timeInput}
+                        onChange={(e) => setTimeInput(e.target.value)}
+                        placeholder="Enter available time (e.g., 09:00 AM)"
+                        className="input"
+                    />
+                    <button className="add-button" onClick={handleAddTime}>Add Time</button>
+                    <button className="save-button" onClick={handleSave}>Save Times</button>
+                </div>
+
+                <div className="form-group">
+                    <input
+                        type="text"
+                        value={timeToDelete}
+                        onChange={(e) => setTimeToDelete(e.target.value)}
+                        placeholder="Time to delete"
+                        className="input"
+                    />
+                    <button className="delete-button" onClick={handleDeleteTimes}>Delete Time</button>
+                </div>
+
+                <div>
+                    <h4 className="label">Times to Save</h4>
+                    <ul className="list">
+                        {times.map((time, index) => (
+                            <li key={index} className="list-item">
+                                {time}
+                                <span className="delete-icon" onClick={() => setTimes(times.filter((_, i) => i !== index))}>×</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 className="label">Existing Times</h4>
+                    <ul className="list">
+                        {availableTimes.map((time, index) => (
+                            <li key={index} className="list-item">
+                                {time}
+                                <span className="delete-icon" onClick={() => onDeleteTimes([time])}>×</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             </div>
 
-            <div className="form-group">
-                <input
-                    type="text"
-                    value={timeToDelete}
-                    onChange={(e) => setTimeToDelete(e.target.value)}
-                    placeholder="Time to delete"
-                    className="input"
-                />
-                <button className="delete-button" onClick={handleDeleteTimes}>Delete Time</button>
-            </div>
+            <div className="right-side">
+                <div className="template-section">
+                    <h4 className="label">Create Template</h4>
+                    <input
+                        type="text"
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
+                        placeholder="Template Name"
+                        className="input"
+                    />
+                    <button className="add-button" onClick={handleSaveTemplate}>Save Template</button>
+                </div>
 
-            <div>
-                <h4 className="label">Times to Save</h4>
-                <ul className="list">
-                    {times.map((time, index) => (
-                        <li key={index} className="list-item">{time}</li>
-                    ))}
-                </ul>
-            </div>
+                <div className="template-section">
+                    <h4 className="label">Use Template</h4>
+                    <select className="select" value={selectedTemplate} onChange={handleSelectTemplate}>
+                        <option value="">Select a template</option>
+                        {templates.map((template, index) => (
+                            <option key={index} value={template.name}>
+                                {template.name}
+                            </option>
+                        ))}
+                    </select>
 
-            <div className="template-section">
-                <h4 className="label">Create Template</h4>
-                <input
-                    type="text"
-                    value={templateName}
-                    onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="Template Name"
-                    className="input"
-                />
-                <button className="add-button" onClick={handleSaveTemplate}>Save Template</button>
-            </div>
-
-            <div className="template-section">
-                <h4 className="label">Use Template</h4>
-                <select className="select" value={selectedTemplate} onChange={handleSelectTemplate}>
-                    <option value="">Select a template</option>
-                    {templates.map((template, index) => (
-                        <option key={index} value={template.name}>
-                            {template.name}
-                        </option>
-                    ))}
-                </select>
-
-                <h4 className="label">Saved Templates</h4>
-                <ul className="list">
-                    {templates.map((template, index) => (
-                        <li key={index} className="list-item">
-                            {template.name}
-                            <button className="delete-button" onClick={() => handleDeleteTemplate(template.name)}>Delete Template</button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-
-            <div>
-                <h4 className="label">Existing Times</h4>
-                <ul className="list">
-                    {availableTimes.map((time, index) => (
-                        <li key={index} className="list-item">
-                            {time}
-                            <button className="delete-button" onClick={() => onDeleteTimes([time])}>Delete</button>
-                        </li>
-                    ))}
-                </ul>
+                    <h4 className="label">Saved Templates</h4>
+                    <ul className="list">
+                        {templates.map((template, index) => (
+                            <li key={index} className="list-item">
+                                {template.name}
+                                <button className="delete-button" onClick={() => handleDeleteTemplate(template.name)}>Delete Template</button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             </div>
         </div>
     );

@@ -92,11 +92,9 @@ const AdminDashboard = () => {
             <CalendarComponent setSelectedDate={setSelectedDate} />
 
             {selectedDate && (
-                <div className="section">
-                    <h2 className="subHeading">Manage Times for {selectedDate.toDateString()}</h2>
-                    <button className="dropdown-toggle" onClick={() => setShowTimesForm(!showTimesForm)}>
-                        {showTimesForm ? 'Hide Form' : 'Show Form'}
-                    </button>
+                <div className="times-section">
+                    <button className="subHeading-dropdown-toggle" onClick={() => setShowTimesForm(!showTimesForm)}><h2 className="subHeading">Manage Times for {selectedDate.toDateString()}</h2></button>
+
                     {showTimesForm && (
                         <AvailableTimesForm
                             onSaveTimes={handleSaveTimes}

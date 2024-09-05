@@ -8,6 +8,8 @@
 .heading {
     text-align: center;
     color: #333;
+    width: 100%;
+    display: block;
 }
 
 .section {
@@ -17,21 +19,49 @@
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+.times-section {
+    width: 100%;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-container {
+    display: flex;
+    justify-content: center; /* Center the dropdown button */
+}
 
 .dropdown {
     cursor: pointer;
     border: 1px solid #ddd;
     border-radius: 4px;
     overflow: hidden;
+    width: 100%;
+    max-width: 600px; /* Optional: Set a max-width for better readability */
 }
 
 .dropdown-title {
     background-color: #2196F3;
     color: #fff;
     padding: 10px;
-    margin: 0;
     font-size: 18px;
     text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-title::after {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #fff;
+    margin-left: 10px;
 }
 
 .dropdown-content {
