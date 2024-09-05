@@ -1,49 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CalendarComponent from '../components/CalendarComponent';
 import axios from 'axios';
-
-import './Styling/adminDashboard.css'
+import './Styling/adminDashboard.css';
 import AvailableTimesForm from '../components/AvailableTimesForm';
+import config from '../config';  // Importing baseURL from config
+
 const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [showTimesForm, setShowTimesForm] = useState(false);
 
-    useEffect(() => {
+    const fetchTimes = useCallback(async () => {
         if (selectedDate) {
-            const fetchTimes = async () => {
-                try {
-                    const response = await axios.get('http://localhost:5000/api/get-times', {
-                        params: { date: selectedDate.toDateString() }
-                    });
-                    setAvailableTimes(response.data.times || []);
-                } catch (error) {
-                    console.error('Failed to fetch times:', error);
-                }
-            };
-
-            fetchTimes();
+            try {
+                const response = await axios.get(`${config.baseURL}/get-times`, {
+                    params: { date: selectedDate.toDateString() }
+                });
+                setAvailableTimes(response.data.times || []);
+            } catch (error) {
+                console.error(`Failed to fetch times from ${config.baseURL}:`, error);
+            }
         }
     }, [selectedDate]);
+    
 
     useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/get-bookings');
-                setBookings(response.data || []);
-            } catch (error) {
-                console.error('Error fetching bookings:', error);
-            }
-        };
+        console.log(`Fetching times from: ${config.baseURL}/get-times`);
+        fetchTimes();
+    }, [fetchTimes]);
+    
 
-        fetchBookings();
+    const fetchBookings = useCallback(async () => {
+        try {
+            const response = await axios.get(`${config.baseURL}/get-bookings`);
+            setBookings(response.data || []);
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
 
     const handleSaveTimes = async (times) => {
         if (selectedDate) {
             try {
-                await axios.post('http://localhost:5000/api/save-times', {
+                await axios.post(`${config.baseURL}/save-times`, {
                     date: selectedDate.toDateString(),
                     times
                 });
@@ -57,7 +61,7 @@ const AdminDashboard = () => {
     const handleDeleteTimes = async (timesToDelete) => {
         if (selectedDate) {
             try {
-                await axios.delete('http://localhost:5000/api/delete-times', {
+                await axios.delete(`${config.baseURL}/delete-times`, {
                     data: {
                         date: selectedDate.toDateString(),
                         timesToDelete
@@ -77,7 +81,7 @@ const AdminDashboard = () => {
         }
 
         try {
-            await axios.delete(`http://localhost:5000/api/delete-booking/${bookingId}`);
+            await axios.delete(`${config.baseURL}/delete-booking/${bookingId}`);
             setBookings((prevBookings) => prevBookings.filter((booking) => booking.id !== bookingId));
             alert('Booking deleted successfully');
         } catch (error) {
@@ -87,13 +91,18 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="container">
+        <div className="admin-container">
             <h1 className="heading">Admin Dashboard</h1>
             <CalendarComponent setSelectedDate={setSelectedDate} />
 
             {selectedDate && (
                 <div className="times-section">
-                    <button className="subHeading-dropdown-toggle" onClick={() => setShowTimesForm(!showTimesForm)}><h2 className="subHeading">Manage Times for {selectedDate.toDateString()}</h2></button>
+                    <button
+                        className="subHeading-dropdown-toggle"
+                        onClick={() => setShowTimesForm(!showTimesForm)}
+                    >
+                        <h2 className="subHeading">Manage Times for {selectedDate.toDateString()}</h2>
+                    </button>
 
                     {showTimesForm && (
                         <AvailableTimesForm
@@ -114,36 +123,41 @@ const AdminDashboard = () => {
 };
 
 const BookingsTable = ({ bookings, onDeleteBooking }) => (
-    <table className="table">
-        <thead>
-            <tr>
-                <th className="th">Date</th>
-                <th className="th">Time</th>
-                <th className="th">Service</th>
-                <th className="th">User Name</th>
-                <th className="th">User Email</th>
-                <th className="th">User Phone</th>
-                <th className="th">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {bookings.map((booking) => (
-                <tr key={booking.id} className="tr">
-                    <td className="td">{booking.date}</td>
-                    <td className="td">{booking.time}</td>
-                    <td className="td">{booking.service}</td>
-                    <td className="td">{booking.userName}</td>
-                    <td className="td">{booking.userEmail}</td>
-                    <td className="td">{booking.userPhone}</td>
-                    <td className="td">
-                        <button className="delete-button" onClick={() => onDeleteBooking(booking.id)}>
-                            Cancel Booking
-                        </button>
-                    </td>
+    <div className="table-responsive">
+        <table className="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Service</th>
+                    <th>User Name</th>
+                    <th>User Email</th>
+                    <th>User Phone</th>
+                    <th>Actions</th>
                 </tr>
-            ))}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {bookings.map((booking) => (
+                    <tr key={booking.id}>
+                        <td>{booking.date}</td>
+                        <td>{booking.time}</td>
+                        <td>{booking.service}</td>
+                        <td>{booking.userName}</td>
+                        <td>{booking.userEmail}</td>
+                        <td>{booking.userPhone}</td>
+                        <td>
+                            <button
+                                className="delete-button"
+                                onClick={() => onDeleteBooking(booking.id)}
+                            >
+                                Cancel Booking
+                            </button>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </div>
 );
 
 export default AdminDashboard;

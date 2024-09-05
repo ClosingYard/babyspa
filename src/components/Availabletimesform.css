@@ -7,6 +7,7 @@
     background-color: #fff;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap; /* Allows content to stack on smaller screens */
 }
 
 .left-side, .right-side {
@@ -20,6 +21,9 @@
 
 .right-side {
     padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .form-group {
@@ -31,34 +35,30 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     margin-right: 10px;
+    width: 100%; /* Full width for inputs on small screens */
+}
+
+.add-button, .save-button, .delete-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px; /* Adds space between buttons on mobile */
+    width: 100%; /* Full width for buttons on small screens */
 }
 
 .add-button {
-    padding: 8px 16px;
     background-color: #4CAF50;
     color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 10px;
 }
 
 .save-button {
-    padding: 8px 16px;
     background-color: #2196F3;
     color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
 .delete-button {
-    padding: 8px 16px;
     background-color: #f44336;
     color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
 .select {
@@ -66,6 +66,7 @@
     border-radius: 4px;
     border: 1px solid #ddd;
     margin-bottom: 10px;
+    width: 100%; /* Full width for select elements on small screens */
 }
 
 .list {
@@ -91,4 +92,93 @@
     cursor: pointer;
     font-size: 16px;
     margin-left: 10px;
+}
+
+/* Split menu styles */
+.split-menu {
+    position: absolute;
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.menu-button {
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.menu-button:hover {
+    background-color: #f0f0f0;
+}
+
+.confirmation-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    z-index: 1000;
+}
+
+.confirm-button, .cancel-button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.confirm-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.cancel-button {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Two-column layout for saved templates */
+.saved-templates {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Two columns with flexible size */
+    gap: 10px; /* Space between items */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .times-form {
+        flex-direction: column; /* Stack the form content */
+    }
+
+    .left-side, .right-side {
+        padding: 10px;
+        border: none;
+    }
+
+    .right-side {
+        padding-left: 10px;
+    }
+
+    .add-button, .save-button, .delete-button {
+        margin-right: 0;
+    }
+
+    .saved-templates {
+        grid-template-columns: 1fr; /* Single column on small screens */
+        width: 100%; /* Ensure templates list fits in mobile view */
+    }
+
+    .list-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

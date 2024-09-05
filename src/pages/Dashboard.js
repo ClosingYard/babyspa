@@ -18,7 +18,7 @@ const Dashboard = ({ user }) => {
     useEffect(() => {
         const fetchAvailableTimes = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/get-times', {
+                const res = await axios.get('http://192.168.1.96:5000/api/get-times', {
                     params: { date: date.toDateString() }
                 });
                 setAvailableTimes(res.data.times || []);
@@ -37,7 +37,7 @@ const Dashboard = ({ user }) => {
         }
     
         try {
-            const response = await axios.post('http://localhost:5000/api/book-time', {
+            const response = await axios.post('http://192.168.1.96:5000/api/book-time', {
                 date: date.toDateString(),
                 time: selectedTime,
                 service,

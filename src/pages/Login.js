@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import config from '../config';
+
 
 function Login({ setUser }) {
     const [email, setEmail] = useState('');
@@ -8,14 +10,16 @@ function Login({ setUser }) {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setError(''); // Clear previous errors
 
         try {
-            const response = await axios.post('http://localhost:5000/api/login', { email, password });
+            const response = await axios.post(`${config.baseURL}/login`, { email, password });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
             console.log('Logged in user:', user); // Log user object
             setUser(user); // Ensure user object includes firstName
         } catch (err) {
+            console.log('Failed to login:', err.message);
             setError('Invalid email or password');
         }
     };
@@ -26,20 +30,20 @@ function Login({ setUser }) {
             <form onSubmit={handleLogin}>
                 <div>
                     <label>Email:</label>
-                    <input 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
                     />
                 </div>
                 <div>
                     <label>Password:</label>
-                    <input 
-                        type="password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
                     />
                 </div>
                 <button type="submit">Login</button>
