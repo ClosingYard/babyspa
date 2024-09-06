@@ -5,7 +5,7 @@
       "start": "concurrently \"npm run start-client\" \"npm run start-server\"",
       "start-client": "cd client && npm start",
       "start-server": "cd server && npm run dev",
-      "build-client": "cd client && npm run build",
+      "build-client": "cd client && npx react-scripts build",
       "build": "npm run build-client",
       "install": "cd client && npm install"
     },
