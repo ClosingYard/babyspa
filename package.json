@@ -5,7 +5,8 @@
       "start": "concurrently \"npm run start-client\" \"npm run start-server\"",
       "start-client": "cd client && npm start",
       "start-server": "cd server && npm run dev",
-      "install": "cd client && npm install"
+      "install": "cd client && npm install",
+      "build": "cd client && npm run build"
     },
     "devDependencies": {
       "concurrently": "^7.6.0"
