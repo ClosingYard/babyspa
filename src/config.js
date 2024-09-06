@@ -2,7 +2,7 @@ const useSecondaryServer = process.env.REACT_APP_USE_SECONDARY_SERVER === 'true'
 
 const config = {
     baseURL: useSecondaryServer 
-        ? (process.env.REACT_APP_SECONDARY_API_URL || 'http://192.168.1.97:5000/api') // Secondary server URL
+        ? (process.env.REACT_APP_SECONDARY_API_URL || 'https://your-app-name.vercel.app/api') // Secondary server URL
         : (process.env.REACT_APP_API_URL || 'http://192.168.178.86:5000/api'), // Primary server URL
 };
 
