@@ -3,6 +3,7 @@ import CalendarComponent from '../components/CalendarComponent';
 import supabase from '../supabaseClient'; // Import Supabase client
 import './Styling/adminDashboard.css';
 import AvailableTimesForm from '../components/AvailableTimesForm';
+import BookingsComponent from '../components/BookingsComponent';
 
 // Utility functions
 const formatDate = (date) => {
@@ -37,7 +38,8 @@ const formatTime = (time) => {
 const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
-    const [bookings, setBookings] = useState([]);
+
+    
     const [showTimesForm, setShowTimesForm] = useState(false);
 
     const fetchTimes = useCallback(async () => {
@@ -92,57 +94,8 @@ const AdminDashboard = () => {
     // Fetch bookings from the database
 
 
-    useEffect(() => {
-        fetchTimes();
-    }, [fetchTimes]);
-
     // Fetch bookings from the database
-    const fetchBookings = useCallback(async () => {
-        try {
-            const { data, error } = await supabase
-                .from('bookings')
-                .select('*');
-    
-            if (error) throw error;
-    
-            console.log('Fetched bookings:', data); // Verify the data structure
-    
-            setBookings(data || []);
-        } catch (error) {
-            console.error('Error fetching bookings:', error);
-        }
-    }, []);
-    
-    
-
-    // Fetch bookings when the component mounts
-    useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
-
-    // Handle booking deletion
-    // Delete booking handler with confirmation
-    const handleDeleteBooking = async (id) => {
-        if (window.confirm('Are you sure you want to delete this booking?')) {
-            try {
-                const { error } = await supabase
-                    .from('bookings')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                // Remove booking from local state after deletion
-                setBookings(prevBookings => 
-                    prevBookings.filter(booking => booking.id !== id)
-                );
-
-                console.log('Booking deleted successfully');
-            } catch (error) {
-                console.error('Error deleting booking:', error);
-            }
-        }
-    };
+  
     const handleSaveTimes = async (times) => {
         if (selectedDate) {
             try {
@@ -221,18 +174,15 @@ const AdminDashboard = () => {
             }
         }
     };
-    const handleRefresh = () => {
-        fetchBookings();
-        fetchTimes();
-    };
+
 
 
 
     return (
         <div className="admin-container">
             <div className="calendar-and-times">
-                <div className="calendar-section left-side">
-                    <CalendarComponent setSelectedDate={setSelectedDate} />
+                    <div className="calendar-container left-side">
+                    <CalendarComponent  style={{ width: '100%', height: '100%' }} className="CalendarComponent" setSelectedDate={setSelectedDate} />
                 </div>
                 <div className="calendar-section right-side">
                     <h2 className="subHeading">Available Times</h2>
@@ -275,64 +225,11 @@ const AdminDashboard = () => {
                     </div>
                 )}
             </div>
-            <button className="refresh-button" onClick={handleRefresh}>
-                        Refresh
-                    </button>
-                    <div className="section">
-                <div className="header">
-                    <h2 className="subHeading">All Bookings</h2>
-                    <button className="refresh-button" onClick={handleRefresh}>
-                        Refresh
-                    </button>
-                </div>
-                <BookingsTable bookings={bookings} onDeleteBooking={handleDeleteBooking} />
-            </div>
+            <BookingsComponent /> {/* Include the new BookingsComponent */}
         </div>
     );
 };
 
-const BookingsTable = ({ bookings, onDeleteBooking }) => (
-    <div className="table-responsive">
-        <table className="table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Service</th>
-                    <th>User Name</th>
-                    <th>User Email</th>
-                    <th>User Phone</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {bookings.length === 0 ? (
-                    <tr>
-                        <td colSpan="7">No bookings available</td>
-                    </tr>
-                ) : (
-                    bookings.map((booking) => (
-                        <tr key={booking.id}>
-                            <td>{booking.date || 'N/A'}</td>
-                            <td>{booking.time || 'N/A'}</td>
-                            <td>{booking.service || 'N/A'}</td>
-                            <td>{booking.user_name || 'N/A'}</td>
-                            <td>{booking.user_email || 'N/A'}</td>
-                            <td>{booking.user_phone || 'N/A'}</td>
-                            <td>
-                                <button
-                                    className="delete-button"
-                                    onClick={() => onDeleteBooking(booking.id)}
-                                >
-                                    Cancel Booking
-                                </button>
-                            </td>
-                        </tr>
-                    ))
-                )}
-            </tbody>
-        </table>
-    </div>
-);
+
 
 export default AdminDashboard;
