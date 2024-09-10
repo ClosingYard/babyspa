@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import CalendarComponent from '../components/CalendarComponent';
-import axios from 'axios';
+import supabase from '../supabaseClient'; // Import Supabase client
 import './Styling/adminDashboard.css';
 import AvailableTimesForm from '../components/AvailableTimesForm';
-import config from '../config';  // Importing baseURL from config
 
 const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -14,27 +13,33 @@ const AdminDashboard = () => {
     const fetchTimes = useCallback(async () => {
         if (selectedDate) {
             try {
-                const response = await axios.get(`${config.baseURL}/get-times`, {
-                    params: { date: selectedDate.toDateString() }
-                });
-                setAvailableTimes(response.data.times || []);
+                const { data, error } = await supabase
+                    .from('available-times')
+                    .select('*')
+                    .eq('date', selectedDate.toDateString());
+
+                if (error) throw error;
+
+                setAvailableTimes(data || []);
             } catch (error) {
-                console.error(`Failed to fetch times from ${config.baseURL}:`, error);
+                console.error('Failed to fetch times:', error);
             }
         }
     }, [selectedDate]);
-    
 
     useEffect(() => {
-        console.log(`Fetching times from: ${config.baseURL}/get-times`);
         fetchTimes();
     }, [fetchTimes]);
-    
 
     const fetchBookings = useCallback(async () => {
         try {
-            const response = await axios.get(`${config.baseURL}/get-bookings`);
-            setBookings(response.data || []);
+            const { data, error } = await supabase
+                .from('bookings')
+                .select('*');
+
+            if (error) throw error;
+
+            setBookings(data || []);
         } catch (error) {
             console.error('Error fetching bookings:', error);
         }
@@ -47,10 +52,15 @@ const AdminDashboard = () => {
     const handleSaveTimes = async (times) => {
         if (selectedDate) {
             try {
-                await axios.post(`${config.baseURL}/save-times`, {
-                    date: selectedDate.toDateString(),
-                    times
-                });
+                // Assuming `times` is an array of objects with relevant fields
+                for (const time of times) {
+                    const { error } = await supabase
+                        .from('available-times')
+                        .upsert({ date: selectedDate.toDateString(), ...time });
+
+                    if (error) throw error;
+                }
+
                 setAvailableTimes((prevTimes) => [...prevTimes, ...times]);
             } catch (error) {
                 console.error('Failed to save times:', error);
@@ -61,12 +71,14 @@ const AdminDashboard = () => {
     const handleDeleteTimes = async (timesToDelete) => {
         if (selectedDate) {
             try {
-                await axios.delete(`${config.baseURL}/delete-times`, {
-                    data: {
-                        date: selectedDate.toDateString(),
-                        timesToDelete
-                    }
-                });
+                const { error } = await supabase
+                    .from('available-times')
+                    .delete()
+                    .in('time', timesToDelete)
+                    .eq('date', selectedDate.toDateString());
+
+                if (error) throw error;
+
                 setAvailableTimes((prevTimes) => prevTimes.filter(time => !timesToDelete.includes(time)));
             } catch (error) {
                 console.error('Failed to delete times:', error);
@@ -81,7 +93,13 @@ const AdminDashboard = () => {
         }
 
         try {
-            await axios.delete(`${config.baseURL}/delete-booking/${bookingId}`);
+            const { error } = await supabase
+                .from('bookings')
+                .delete()
+                .eq('id', bookingId);
+
+            if (error) throw error;
+
             setBookings((prevBookings) => prevBookings.filter((booking) => booking.id !== bookingId));
             alert('Booking deleted successfully');
         } catch (error) {

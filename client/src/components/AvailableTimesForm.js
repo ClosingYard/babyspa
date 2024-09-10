@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './AvailableTimesForm.css';
-import axios from 'axios';
-import config from '../config';
+import supabase from '../supabaseClient';
 
 const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
     const [times, setTimes] = useState([]);
@@ -17,8 +16,13 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
     useEffect(() => {
         const fetchTemplates = async () => {
             try {
-                const response = await axios.get(`${config.baseURL}/get-templates`);
-                setTemplates(response.data || []);
+                const { data, error } = await supabase
+                    .from('templates')
+                    .select('*');
+
+                if (error) throw error;
+
+                setTemplates(data || []);
             } catch (error) {
                 console.error('Error fetching templates:', error);
             }
@@ -46,20 +50,34 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
         }
     };
 
-    const handleSave = () => {
-        onSaveTimes(times);
-        setTimes([]);
+    const handleSave = async () => {
+        try {
+            await onSaveTimes(times);
+            setTimes([]);
+        } catch (error) {
+            console.error('Error saving times:', error);
+        }
     };
 
     const handleSaveTemplate = async () => {
         if (templateName && times.length) {
             try {
-                const newTemplate = { name: templateName, times };
-                await axios.post(`${config.baseURL}/save-template`, newTemplate);
+                const newTemplate = { name: templateName, times: JSON.stringify(times) };
+                const { error } = await supabase
+                    .from('templates')
+                    .insert([newTemplate]);
 
-                const response = await axios.get(`${config.baseURL}/get-templates`);
-                setTemplates(response.data || []);
+                if (error) throw error;
+
+                const { data, error: fetchError } = await supabase
+                    .from('templates')
+                    .select('*');
+
+                if (fetchError) throw fetchError;
+
+                setTemplates(data || []);
                 setTemplateName('');
+                setTimes([]);
             } catch (error) {
                 console.error('Error saving template:', error);
             }
@@ -68,22 +86,49 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
         }
     };
 
-    const handleSelectTemplate = (e) => {
+    const handleSelectTemplate = async (e) => {
         const selected = e.target.value;
         setSelectedTemplate(selected);
-        const template = templates.find((t) => t.name === selected);
-        if (template) {
-            setTimes(template.times);
+
+        if (selected) {
+            try {
+                const { data, error } = await supabase
+                    .from('templates')
+                    .select('times')
+                    .eq('name', selected)
+                    .single();
+
+                if (error) throw error;
+
+                const template = data;
+                if (template) {
+                    setTimes(JSON.parse(template.times));
+                }
+            } catch (error) {
+                console.error('Error fetching template:', error);
+            }
+        } else {
+            setTimes([]);
         }
     };
 
     const handleDeleteTemplate = async () => {
         if (templateToDelete) {
             try {
-                await axios.delete(`${config.baseURL}/delete-template`, { data: { name: templateToDelete } });
+                const { error } = await supabase
+                    .from('templates')
+                    .delete()
+                    .eq('name', templateToDelete);
 
-                const response = await axios.get(`${config.baseURL}/get-templates`);
-                setTemplates(response.data || []);
+                if (error) throw error;
+
+                const { data, error: fetchError } = await supabase
+                    .from('templates')
+                    .select('*');
+
+                if (fetchError) throw fetchError;
+
+                setTemplates(data || []);
                 setShowConfirmation(false);
                 setTemplateToDelete(null);
             } catch (error) {
@@ -108,7 +153,7 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
         } else if (action === 'Use') {
             const template = templates.find((t) => t.name === menuTemplate);
             if (template) {
-                setTimes(template.times);
+                setTimes(JSON.parse(template.times));
             }
             setMenuTemplate(null);
         }
@@ -118,7 +163,7 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
         <div className="times-form">
             <div className="left-side">
                 <div className="form-group">
-                    <h4 className="label">Tijden toevoegen.</h4>
+                    <h4 className="label">Add Times</h4>
                     <input
                         type="text"
                         value={timeInput}
@@ -130,7 +175,7 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
                 </div>
 
                 <div>
-                    <h4 className="label">Tijden die nog opgeslagen moeten worden.</h4>
+                    <h4 className="label">Times to be saved</h4>
                     <ul className="list">
                         {times.map((time, index) => (
                             <li key={index} className="list-item">
@@ -143,7 +188,7 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes }) => {
                 </div>
 
                 <div>
-                    <h4 className="label">Actieve tijden in agenda.</h4>
+                    <h4 className="label">Active Times in Calendar</h4>
                     <ul className="list">
                         {availableTimes.map((time, index) => (
                             <li key={index} className="list-item">

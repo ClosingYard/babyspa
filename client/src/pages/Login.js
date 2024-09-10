@@ -1,28 +1,49 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import config from '../config';
-
+import supabase from '../supabaseClient'; // Import your Supabase client
 
 function Login({ setUser }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [stayLoggedIn, setStayLoggedIn] = useState(false);
+
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError(''); // Clear previous errors
-
+    
         try {
-            const response = await axios.post(`${config.baseURL}/login`, { email, password });
-            const { token, user } = response.data;
-            localStorage.setItem('token', token);
-            console.log('Logged in user:', user); // Log user object
-            setUser(user); // Ensure user object includes firstName
+            // Sign in the user with Supabase authentication
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+    
+            if (error) {
+                throw error;
+            }
+    
+            const user = data.user;
+            const session = data.session;
+    
+            if (stayLoggedIn) {
+                // Store token in localStorage for "Stay Logged In"
+                localStorage.setItem('token', session.access_token);
+            } else {
+                // Store token in sessionStorage for temporary session
+                sessionStorage.setItem('token', session.access_token);
+            }
+    
+            // Set user in the state
+            setUser(user);
         } catch (err) {
             console.log('Failed to login:', err.message);
             setError('Invalid email or password');
         }
     };
+    
+
+    
 
     return (
         <div>
@@ -46,6 +67,16 @@ function Login({ setUser }) {
                         required
                     />
                 </div>
+                <div>
+    <input
+        type="checkbox"
+        id="stayLoggedIn"
+        checked={stayLoggedIn}
+        onChange={(e) => setStayLoggedIn(e.target.checked)}
+    />
+    <label htmlFor="stayLoggedIn">Stay Logged In</label>
+</div>
+
                 <button type="submit">Login</button>
                 {error && <p>{error}</p>}
             </form>
