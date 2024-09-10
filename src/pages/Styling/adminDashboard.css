@@ -1,5 +1,3 @@
-/* adminDashboard.css */
-
 .admin-container {
     padding: 20px;
 }
@@ -9,8 +7,29 @@
     margin-bottom: 20px;
 }
 
+.calendar-and-times {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.calendar-section {
+    flex: 1;
+    margin-right: 20px; /* Space between calendar and available times */
+}
+
 .times-section {
-    margin-top: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column; /* Ensure that times stack vertically */
+    gap: 10px; /* Add space between each time */
+}
+
+.time-entry {
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
 }
 
 .subHeading-dropdown-toggle {
@@ -63,4 +82,87 @@
     .heading {
         font-size: 24px;
     }
+
+    /* Make calendar and times section stack vertically on small screens */
+    .calendar-and-times {
+        flex-direction: column;
+    }
+
+    .calendar-section {
+        margin-right: 0;
+        margin-bottom: 20px; /* Space between calendar and times section */
+    }
+    
 }
+
+.left-side, .right-side {
+    flex: 1;
+    padding: 20px;
+}
+
+.left-side {
+    border-right: 1px solid #ddd;
+}
+
+.right-side {
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+/* Styles for the available times list */
+/* Styles for the available times list */
+/* Styles for the available times list */
+.available-times-list {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* 6 columns */
+    grid-gap: 10px; /* Gap between grid items */
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Each time item styling */
+.available-time-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 16px;
+}
+
+/* Delete button styling */
+.delete-button {
+    background: none;
+    border: none;
+    color: red;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+/* adminDashboard.css */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.refresh-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.refresh-button:hover {
+    background-color: #0056b3;
+}
+
