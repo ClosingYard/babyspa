@@ -8,6 +8,8 @@
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     flex-wrap: wrap; /* Allows content to stack on smaller screens */
+    width: 100%; /* Ensure the form stretches to fit screen width */
+    max-width: 100%; /* Prevents overflow on small screens */
 }
 
 .left-side, .right-side {
@@ -28,6 +30,7 @@
 
 .form-group {
     margin-bottom: 10px;
+    width: 100%;
 }
 
 .input {
@@ -149,13 +152,11 @@
 /* Two-column layout for saved templates */
 .saved-templates {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Two columns with flexible size */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Flexible columns */
     gap: 10px; /* Space between items */
 }
 
 /* AvailableTimesForm.css */
-/* AvailableTimesForm.css */
-
 .template-list {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* 3 columns */
@@ -178,7 +179,6 @@
     background-color: #f0f0f0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
-
 
 .template-item span {
     font-size: 1.1em;
@@ -257,8 +257,6 @@
 .confirmation-popup button:hover {
     background-color: #c82333;
 }
-
-
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {

@@ -1,3 +1,5 @@
+/* src/components/AdminComponent.css */
+
 .admin-container {
     padding: 20px;
 }
@@ -5,20 +7,21 @@
 .heading {
     text-align: center;
     margin-bottom: 20px;
+    font-size: 28px; /* Adjusted font size */
 }
 
 .calendar-and-times {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    flex-wrap: wrap; /* Allow stacking on smaller screens */
 }
 
 .calendar-container {
     width: 100%;
-    max-width: 1000px; /* Adjust to your desired maximum width */
-    height: 600px; /* Adjust to your desired height */
-    margin: auto; /* Center horizontally */
-    /* Optional: Add padding or border */
+    max-width: 1000px;
+    height: 600px;
+    margin: auto;
     padding: 10px;
     border: 1px solid #ccc;
 }
@@ -26,8 +29,8 @@
 .times-section {
     flex: 1;
     display: flex;
-    flex-direction: column; /* Ensure that times stack vertically */
-    gap: 10px; /* Add space between each time */
+    flex-direction: column;
+    gap: 10px;
 }
 
 .time-entry {
@@ -38,21 +41,20 @@
 }
 
 .CalendarComponent {
-    width: 100%; /* Adjust the width as needed (e.g., 80% for 80% of the container's width) */
-    max-width: 800px; /* Set a maximum width if needed */
-    height: 600px; /* Adjust the height as needed */
-    /* Optionally add padding or margin for spacing */
-    padding: 20px; /* Adjust padding as needed */
-    margin: auto; /* Center the calendar horizontally within its container */
+    width: 100%;
+    max-width: 800px;
+    height: 600px;
+    padding: 20px;
+    margin: auto;
 }
 
 .subHeading-dropdown-toggle {
     display: flex;
-    justify-content: center; /* Center content horizontally */
-    align-items: center; /* Center content vertically if needed */
-    width: 100%; /* Make sure it takes up the full width of its container */
-    text-align: center; /* Center text inside if it's a block-level element */
-    margin: 20px 0 0; /* Adjust the top margin to add space above */
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+    margin: 20px 0 0;
 }
 
 .section {
@@ -71,28 +73,26 @@
 }
 
 .react-calendar {
-    width: 100%; /* Make the calendar take up the full width of its container */
-    height: auto; /* Adjust height to fit the content */
+    width: 100%;
+    height: auto;
 }
 
 .delete-button {
     color: red;
     cursor: pointer;
-    /* Target internal calendar elements */
+}
+
 .CalendarComponent .calendar-body {
     width: 100%;
-    height: 100%; /* Make sure the calendar takes up the full height */
+    height: 100%;
 }
 
-/* Adjust specific calendar elements if necessary */
 .CalendarComponent .calendar-day {
     width: 100%;
-    height: 100%; /* Ensure days take up full space */
-    /* Optional: Adjust font size or other styles */
-}
+    height: 100%;
 }
 
-/* Mobile responsiveness */
+/* Responsive adjustments for mobile */
 @media (max-width: 768px) {
     .table-responsive {
         overflow-x: auto;
@@ -115,19 +115,24 @@
         font-size: 24px;
     }
 
-    /* Make calendar and times section stack vertically on small screens */
     .calendar-and-times {
-        display: flex;
-        justify-content: center; /* Center horizontally */
-        align-items: center; /* Center vertically if needed */
-        width: 100%; /* Ensure it takes up full width or adjust as needed */
+        flex-direction: column; /* Stack calendar and times section vertically */
+        align-items: center;
+    }
+
+    .calendar-container {
+        max-width: 100%; /* Full width on smaller screens */
+    }
+
+    .CalendarComponent {
+        width: 100%; /* Full width on smaller screens */
+        height: auto;
     }
     
-    .calendar-section {
-        flex: 1; /* Allow sections to grow and shrink */
-        max-width: 600px; /* Optional max-width for the calendar */
+    .times-section {
+        width: 100%; /* Full width on smaller screens */
+        margin-top: 20px;
     }
-    
 }
 
 .left-side, .right-side {
@@ -139,13 +144,13 @@
     border-right: 1px solid #ddd;
 }
 
-.left-side2{
+.left-side2 {
     display: flex;
-    justify-content: center; /* Center calendar horizontally */
+    justify-content: center;
 }
 
 .CalendarComponent {
-    margin-left: 60;
+    margin-left: 60px;
 }
 
 .right-side {
@@ -157,14 +162,13 @@
 
 .available-times-list {
     display: grid;
-    grid-template-columns: repeat(6, 1fr); /* 6 columns */
-    grid-gap: 10px; /* Gap between grid items */
+    grid-template-columns: repeat(6, 1fr);
+    grid-gap: 10px;
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-/* Each time item styling */
 .available-time-item {
     display: flex;
     justify-content: space-between;
@@ -176,7 +180,6 @@
     font-size: 16px;
 }
 
-/* Delete button styling */
 .delete-button {
     background: none;
     border: none;
@@ -186,11 +189,14 @@
     margin-left: 10px;
 }
 
+/* Mobile-specific styles */
 @media (max-width: 768px) {
     .CalendarComponent {
         width: 90%; /* Adjust width for smaller screens */
-        height: auto; /* Adjust height as needed */
+        height: auto;
+    }
+
+    .available-times-list {
+        grid-template-columns: repeat(2, 1fr); /* Reduce columns to 2 on smaller screens */
     }
 }
-
-
