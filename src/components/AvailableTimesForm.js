@@ -21,8 +21,9 @@ const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
     const [templateToDelete, setTemplateToDelete] = useState(null);
     const [errors, setErrors] = useState([]);
     const menuRef = useRef(null);
+    const formattedDate = selectedDate.toISOString().split('T')[0];
 
-    // Define fetchTemplates outside of useEffect to make it accessible in other functions
+
     const fetchTemplates = async () => {
         try {
             const { data, error } = await supabase
@@ -36,9 +37,8 @@ const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
         }
     };
 
-    // Fetch templates when the component mounts
     useEffect(() => {
-        fetchTemplates(); // Call fetchTemplates to populate the templates
+        fetchTemplates();
     }, []);
 
     useEffect(() => {
@@ -66,19 +66,30 @@ const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
             alert('No times to save.');
             return;
         }
-
+    
         try {
+            // Convert local date to UTC
+            const utcDate = new Date(selectedDate);
+            utcDate.setMinutes(utcDate.getMinutes() - utcDate.getTimezoneOffset());
+    
+            const formattedDate = utcDate.toISOString().split('T')[0];
+            console.log('Selected Date for Saving (UTC):', formattedDate); // Debug log
+    
             const formattedTimes = times.map(time => ({
-                date: selectedDate.toISOString().split('T')[0], // Save the selected date with time
+                date: formattedDate,
                 time: time
             }));
-
+    
+            console.log('Times to Save:', formattedTimes); // Debug log
+    
             const { data, error } = await supabase
                 .from('available_times')
                 .upsert(formattedTimes, { returning: 'representation' });
-
+    
             if (error) throw error;
-
+    
+            console.log('Save Response Data:', data); // Debug log
+    
             setTimes([]);
             setErrors([]);
         } catch (error) {
@@ -86,6 +97,7 @@ const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
             setErrors(['An error occurred while saving times.']);
         }
     };
+    
 
     const handleSaveTemplate = async () => {
         if (templateName && times.length) {
@@ -99,7 +111,7 @@ const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
 
                 if (error) throw error;
 
-                fetchTemplates(); // Re-fetch the templates after saving a new one
+                fetchTemplates();
                 setTemplateName('');
                 setTimes([]);
                 setErrors([]);
@@ -113,15 +125,10 @@ const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
 
     const handleSelectTemplate = (template) => {
         const templateTimes = JSON.parse(template.times);
-        
-        // Just take the time part, no date involved
         const appliedTimes = templateTimes.map(timeObj => timeObj.time);
-        
-        // Set the times in the state for display
         setTimes(appliedTimes);
         setMenuTemplate(null);
     };
-    
 
     const handleDeleteTemplate = async () => {
         if (templateToDelete) {
@@ -133,7 +140,7 @@ const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
 
                 if (error) throw error;
 
-                fetchTemplates(); // Re-fetch templates after deleting
+                fetchTemplates();
                 setShowConfirmation(false);
                 setTemplateToDelete(null);
             } catch (error) {

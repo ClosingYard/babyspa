@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Calendar from 'react-calendar'; // Make sure this package is installed
-import './Styling/dashboardStyle.css'; // Adjust the path to your custom CSS file
+import Calendar from 'react-calendar'; // For the calendar
+import 'react-calendar/dist/Calendar.css'; // Default styling
+import './Styling/dashboardStyle.css'; // Custom styling
+import supabase from '../supabaseClient'; // Import your Supabase client
 
-const Dashboard = ({ user }) => {
-    // State variables
+const Dashboard = () => {
     const [date, setDate] = useState(new Date());
     const [availableTimes, setAvailableTimes] = useState([]);
     const [selectedTime, setSelectedTime] = useState('');
@@ -12,140 +12,164 @@ const Dashboard = ({ user }) => {
     const [userName, setUserName] = useState('');
     const [userEmail, setUserEmail] = useState('');
     const [userPhone, setUserPhone] = useState('');
-    const [bookingId, setBookingId] = useState(null);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
-    // Fetch available times whenever the date changes
-    useEffect(() => {
-        const fetchAvailableTimes = async () => {
-            try {
-                const res = await axios.get('http://192.168.1.96:5000/api/get-times', {
-                    params: { date: date.toDateString() }
-                });
-                setAvailableTimes(res.data.times || []);
-            } catch (error) {
-                console.error('Error fetching available times:', error);
+    // Handle date change
+    const handleDateChange = (newDate) => {
+        setDate(newDate);
+        fetchAvailableTimes(newDate);
+    };
+
+    // Fetch available times from Supabase
+    const fetchAvailableTimes = async (selectedDate) => {
+        try {
+            // Convert selectedDate to UTC to avoid timezone issues
+            const utcDate = new Date(Date.UTC(
+                selectedDate.getFullYear(),
+                selectedDate.getMonth(),
+                selectedDate.getDate()
+            ));
+
+            const formattedDate = utcDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD in UTC
+            const { data, error } = await supabase
+                .from('available_times')
+                .select('time')
+                .eq('date', formattedDate);
+
+            if (error) {
+                console.error('Error fetching available times:', error.message);
+            } else {
+                setAvailableTimes(data || []);
             }
-        };
+        } catch (err) {
+            console.error('Error during fetchAvailableTimes:', err);
+        }
+    };
 
-        fetchAvailableTimes();
-    }, [date]);
+    // Handle time selection
+    const handleTimeClick = (time) => {
+        setSelectedTime(time);
+    };
 
-    const handleBooking = async () => {
+    // Handle booking submission
+    const handleBooking = async (e) => {
+        e.preventDefault();
+
         if (!selectedTime || !service || !userName || !userEmail || !userPhone) {
-            alert('Please fill in all fields before booking.');
+            setError('Please fill out all fields.');
             return;
         }
-    
+
         try {
-            const response = await axios.post('http://192.168.1.96:5000/api/book-time', {
-                date: date.toDateString(),
-                time: selectedTime,
-                service,
-                user: {
-                    name: userName,
-                    email: userEmail,
-                    phone: userPhone
-                }
-            });
-    
-            if (response.status === 200) {
-                setBookingId(response.data.bookingId); // Save the booking ID
-                alert('Booking successful');
+            // Convert date to UTC format
+            const utcDate = new Date(Date.UTC(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate()
+            )).toISOString().split('T')[0]; // Date in YYYY-MM-DD format
+
+            // Convert selected time to UTC
+            const utcTime = new Date(`1970-01-01T${selectedTime}Z`).toISOString().split('T')[1].split('.')[0]; // Time in HH:MM:SS format
+
+            const { data, error } = await supabase
+                .from('bookings')
+                .insert([{
+                    date: utcDate, // Send date in YYYY-MM-DD format
+                    time: utcTime, // Send time in HH:MM:SS format
+                    service,
+                    user_name: userName,
+                    user_email: userEmail,
+                    user_phone: userPhone,
+                }]);
+
+            if (error) {
+                console.error('Error creating booking:', error.message);
+                setError('Failed to create booking.');
+            } else {
+                setSuccess('Booking created successfully!');
+                setError('');
+                // Optionally clear the form
                 setSelectedTime('');
                 setService('');
                 setUserName('');
                 setUserEmail('');
                 setUserPhone('');
-            } else {
-                alert('Failed to book time. Please try again.');
             }
-        } catch (error) {
-            console.error('Error making booking:', error.response || error.message);
-            alert('Error making booking. Please try again later.');
+        } catch (err) {
+            console.error('Error during booking submission:', err);
+            setError('Failed to create booking.');
         }
     };
-    
-    const handleDeleteBooking = async () => {
-        if (!bookingId) {
-            alert('No booking ID available.');
-            return;
-        }
-    
-        try {
-            const response = await axios.delete(`http://localhost:5000/api/book-time/${bookingId}`);
-    
-            if (response.status === 200) {
-                alert('Booking deleted successfully');
-                setBookingId(null); // Clear booking ID
-            } else {
-                alert('Failed to delete booking. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error deleting booking:', error.response || error.message);
-            alert('Error deleting booking. Please try again later.');
-        }
-    };
-    
+
+    useEffect(() => {
+        fetchAvailableTimes(date); // Fetch available times for the initial date
+    }, [date]);
 
     return (
-        <div>
-            <h1>Dashboard</h1>
-            <Calendar onChange={setDate} value={date} />
-            <div>
+        <div className="dashboard">
+            <Calendar
+                onChange={handleDateChange}
+                value={date}
+                className="calendar"
+            />
+            <div className="available-times">
                 <h2>Available Times for {date.toDateString()}</h2>
-                {availableTimes.length > 0 ? (
-                    <ul>
-                        {availableTimes.map((time, index) => (
-                            <li key={index}>
-                                <button onClick={() => setSelectedTime(time)}>{time}</button>
+                <ul>
+                    {availableTimes.length > 0 ? (
+                        availableTimes.map((time, index) => (
+                            <li
+                                key={index}
+                                onClick={() => handleTimeClick(time.time)}
+                                className={`time-slot ${selectedTime === time.time ? 'selected' : ''}`}
+                            >
+                                {time.time}
                             </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No available times for the selected date.</p>
-                )}
+                        ))
+                    ) : (
+                        <li>No available times</li>
+                    )}
+                </ul>
             </div>
             {selectedTime && (
-                <div>
-                    <h3>Book a Reservation for {selectedTime} on {date.toDateString()}</h3>
-                    <form onSubmit={(e) => {
-                        e.preventDefault();
-                        handleBooking();
-                    }}>
-                        <input
-                            type="text"
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            placeholder="Enter your name"
-                            required
-                        />
-                        <input
-                            type="email"
-                            value={userEmail}
-                            onChange={(e) => setUserEmail(e.target.value)}
-                            placeholder="Enter your email"
-                            required
-                        />
-                        <input
-                            type="tel"
-                            value={userPhone}
-                            onChange={(e) => setUserPhone(e.target.value)}
-                            placeholder="Enter your phone number"
-                            required
-                        />
+                <form onSubmit={handleBooking} className="booking-form">
+                    <h2>Create Booking</h2>
+                    {error && <p className="error-message">{error}</p>}
+                    {success && <p className="success-message">{success}</p>}
+                    <div className="form-group">
+                        <label>Service:</label>
                         <input
                             type="text"
                             value={service}
                             onChange={(e) => setService(e.target.value)}
-                            placeholder="Enter service"
-                            required
                         />
-                        <button type="submit">Book Time</button>
-                    </form>
-                    {bookingId && (
-                        <button onClick={handleDeleteBooking}>Cancel Booking</button>
-                    )}
-                </div>
+                    </div>
+                    <div className="form-group">
+                        <label>Your Name:</label>
+                        <input
+                            type="text"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Your Email:</label>
+                        <input
+                            type="email"
+                            value={userEmail}
+                            onChange={(e) => setUserEmail(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Your Phone:</label>
+                        <input
+                            type="text"
+                            value={userPhone}
+                            onChange={(e) => setUserPhone(e.target.value)}
+                        />
+                    </div>
+                    <button type="submit">Book Now</button>
+                </form>
             )}
         </div>
     );

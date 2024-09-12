@@ -38,16 +38,21 @@ const formatTime = (time) => {
 const AdminDashboard = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
-
-    
     const [showTimesForm, setShowTimesForm] = useState(false);
 
     const fetchTimes = useCallback(async () => {
         if (selectedDate) {
             try {
-                const formattedDate = formatDate(selectedDate);
-                console.log('Fetching times for date:', formattedDate);
-                
+                // Convert selectedDate to UTC to prevent timezone issues
+                const utcDate = new Date(Date.UTC(
+                    selectedDate.getFullYear(),
+                    selectedDate.getMonth(),
+                    selectedDate.getDate()
+                ));
+    
+                const formattedDate = utcDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD in UTC
+                console.log('Fetching times for date (UTC):', formattedDate);
+    
                 // Fetch both id and time
                 const { data, error } = await supabase
                     .from('available_times')
@@ -80,22 +85,10 @@ const AdminDashboard = () => {
         }
     }, [selectedDate]);
     
-    
-    
-    
-    
-    
-    
-
     useEffect(() => {
         fetchTimes();
     }, [fetchTimes]);
 
-    // Fetch bookings from the database
-
-
-    // Fetch bookings from the database
-  
     const handleSaveTimes = async (times) => {
         if (selectedDate) {
             try {
@@ -128,6 +121,7 @@ const AdminDashboard = () => {
             }
         }
     };
+
     const handleDeleteTime = async (id) => {
         console.log("Attempting to delete time with ID:", id); // Debug log
     
@@ -152,9 +146,6 @@ const AdminDashboard = () => {
         }
     };
     
-    
-    
-
     const handleDeleteTimes = async (timesToDelete) => {
         if (selectedDate) {
             try {
@@ -175,35 +166,29 @@ const AdminDashboard = () => {
         }
     };
 
-
-
-
     return (
         <div className="admin-container">
             <div className="calendar-and-times">
-                    <div className="calendar-container left-side">
+                <div className="calendar-container left-side">
                     <CalendarComponent  style={{ width: '100%', height: '100%' }} className="CalendarComponent" setSelectedDate={setSelectedDate} />
                 </div>
                 <div className="calendar-section right-side">
                     <h2 className="subHeading">Available Times</h2>
-
                     <ul className="available-times-list">
-    {availableTimes.map((timeEntry) => (
-        <li key={timeEntry.id} className="available-time-item">
-            {timeEntry.time}
-            <button
-                className="delete-button"
-                onClick={() => handleDeleteTime(timeEntry.id)}
-            >
-                &times;
-            </button>
-        </li>
-    ))}
-</ul>
-
+                        {availableTimes.map((timeEntry) => (
+                            <li key={timeEntry.id} className="available-time-item">
+                                {timeEntry.time}
+                                <button
+                                    className="delete-button"
+                                    onClick={() => handleDeleteTime(timeEntry.id)}
+                                >
+                                    &times;
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             </div>
-
             <div className="times-section">
                 {selectedDate && (
                     <div>
@@ -213,7 +198,6 @@ const AdminDashboard = () => {
                         >
                             <h2 className="subHeading">Manage Times for {selectedDate.toDateString()}</h2>
                         </button>
-
                         {showTimesForm && (
                             <AvailableTimesForm
                                 onSaveTimes={handleSaveTimes}
@@ -229,7 +213,5 @@ const AdminDashboard = () => {
         </div>
     );
 };
-
-
 
 export default AdminDashboard;

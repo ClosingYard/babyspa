@@ -1,9 +1,9 @@
 // src/components/BookingsComponent.js
 import React, { useState, useEffect, useCallback } from 'react';
 import supabase from '../supabaseClient'; // Import Supabase client
-import './AdminBookingsComponent.css'; // Import CSS file
+import './BookingsComponent.css'; // Import CSS file
 
-const AdminBookingsComponent = () => {
+const BookingsComponent = () => {
     const [bookings, setBookings] = useState([]);
     const [filterType, setFilterType] = useState('upcoming'); // Filter type (upcoming, all, etc.)
     const [nameFilter, setNameFilter] = useState('');
@@ -191,4 +191,4 @@ const AdminBookingsComponent = () => {
     );
 };
 
-export default AdminBookingsComponent;
+export default BookingsComponent;
