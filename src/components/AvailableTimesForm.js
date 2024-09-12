@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './AvailableTimesForm.css';
 import supabase from '../supabaseClient';
-
-const isValidDate = (date) => {
-    return !isNaN(Date.parse(date));
-};
+import './AvailableTimesForm.css';
 
 const isValidTime = (time) => {
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -15,39 +11,37 @@ const formatTime = (time) => {
     return new Date(`1970-01-01T${time}:00`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, selectedDate }) => {
+const AvailableTimesForm = ({ onSaveTimes, availableTimes, selectedDate }) => {
     const [times, setTimes] = useState([]);
     const [timeInput, setTimeInput] = useState('');
     const [templates, setTemplates] = useState([]);
     const [templateName, setTemplateName] = useState('');
-    const [selectedTemplate, setSelectedTemplate] = useState('');
     const [menuTemplate, setMenuTemplate] = useState(null);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [templateToDelete, setTemplateToDelete] = useState(null);
-    const [editMode, setEditMode] = useState(false);
     const [errors, setErrors] = useState([]);
-    const menuRef = useRef(null); // Ref for the menu container
+    const menuRef = useRef(null);
 
+    // Define fetchTemplates outside of useEffect to make it accessible in other functions
+    const fetchTemplates = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('time-templates')
+                .select('*');
+
+            if (error) throw error;
+            setTemplates(data || []);
+        } catch (error) {
+            console.error('Error fetching templates:', error);
+        }
+    };
+
+    // Fetch templates when the component mounts
     useEffect(() => {
-        const fetchTemplates = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('time-templates')
-                    .select('*');
-
-                if (error) throw error;
-
-                setTemplates(data || []);
-            } catch (error) {
-                console.error('Error fetching templates:', error);
-            }
-        };
-
-        fetchTemplates();
+        fetchTemplates(); // Call fetchTemplates to populate the templates
     }, []);
 
     useEffect(() => {
-        // Close the menu if clicked outside
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setMenuTemplate(null);
@@ -59,24 +53,12 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
     }, []);
 
     const handleAddTime = () => {
-        const newErrors = [];
-
-        if (!isValidDate(selectedDate)) {
-            newErrors.push('Invalid date.');
+        if (isValidTime(timeInput)) {
+            setTimes([...times, timeInput]);
+            setTimeInput('');
+        } else {
+            setErrors(['Invalid time format.']);
         }
-
-        if (!isValidTime(timeInput)) {
-            newErrors.push('Invalid time format.');
-        }
-
-        if (newErrors.length > 0) {
-            setErrors(newErrors);
-            return;
-        }
-
-        setErrors([]);
-        setTimes([...times, { date: selectedDate, time: timeInput }]);
-        setTimeInput('');
     };
 
     const handleSave = async () => {
@@ -84,38 +66,19 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
             alert('No times to save.');
             return;
         }
-    
-        const invalidTimes = times.filter(time => !isValidDate(time.date) || !isValidTime(time.time));
-    
-        if (invalidTimes.length > 0) {
-            setErrors(['Some time entries are invalid and will not be saved.']);
-            return;
-        }
-    
+
         try {
-            console.log('Times to save:', times); // Log the times being saved
-    
-            // Prepare data for upsert
             const formattedTimes = times.map(time => ({
-                date: time.date, // Date is already in ISO format
-                time: time.time
+                date: selectedDate.toISOString().split('T')[0], // Save the selected date with time
+                time: time
             }));
-    
-            console.log('Formatted times for upsert:', formattedTimes); // Log formatted times
-    
-            // Perform the upsert operation
+
             const { data, error } = await supabase
                 .from('available_times')
                 .upsert(formattedTimes, { returning: 'representation' });
-    
-            if (error) {
-                console.error('Supabase error:', error); // Log Supabase error
-                throw error;
-            }
-    
-            console.log('Times saved successfully:', data); // Log the result
-    
-            // Clear the local state
+
+            if (error) throw error;
+
             setTimes([]);
             setErrors([]);
         } catch (error) {
@@ -126,28 +89,17 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
 
     const handleSaveTemplate = async () => {
         if (templateName && times.length) {
-            const invalidTimes = times.filter(time => !isValidDate(time.date) || !isValidTime(time.time));
-
-            if (invalidTimes.length > 0) {
-                setErrors(['Some time entries are invalid and will not be saved.']);
-                return;
-            }
+            const templateTimes = times.map(time => ({ time: time }));
 
             try {
-                const newTemplate = { name: templateName, times: JSON.stringify(times) };
+                const newTemplate = { name: templateName, times: JSON.stringify(templateTimes) };
                 const { error } = await supabase
                     .from('time-templates')
                     .insert([newTemplate]);
 
                 if (error) throw error;
 
-                const { data, error: fetchError } = await supabase
-                    .from('time-templates')
-                    .select('*');
-
-                if (fetchError) throw fetchError;
-
-                setTemplates(data || []);
+                fetchTemplates(); // Re-fetch the templates after saving a new one
                 setTemplateName('');
                 setTimes([]);
                 setErrors([]);
@@ -160,9 +112,16 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
     };
 
     const handleSelectTemplate = (template) => {
-        setSelectedTemplate(template.name);
-        setTimes(JSON.parse(template.times));
+        const templateTimes = JSON.parse(template.times);
+        
+        // Just take the time part, no date involved
+        const appliedTimes = templateTimes.map(timeObj => timeObj.time);
+        
+        // Set the times in the state for display
+        setTimes(appliedTimes);
+        setMenuTemplate(null);
     };
+    
 
     const handleDeleteTemplate = async () => {
         if (templateToDelete) {
@@ -174,13 +133,7 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
 
                 if (error) throw error;
 
-                const { data, error: fetchError } = await supabase
-                    .from('time-templates')
-                    .select('*');
-
-                if (fetchError) throw fetchError;
-
-                setTemplates(data || []);
+                fetchTemplates(); // Re-fetch templates after deleting
                 setShowConfirmation(false);
                 setTemplateToDelete(null);
             } catch (error) {
@@ -204,12 +157,6 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
             setShowConfirmation(true);
         } else if (action === 'Use') {
             handleSelectTemplate(menuTemplate);
-            setMenuTemplate(null);
-        } else if (action === 'Edit') {
-            setTemplateName(menuTemplate.name);
-            setTimes(JSON.parse(menuTemplate.times));
-            setEditMode(true);
-            setMenuTemplate(null);
         }
     };
 
@@ -241,7 +188,7 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
                     <ul className="list">
                         {times.map((time, index) => (
                             <li key={index} className="list-item">
-                                {formatTime(time.time)}
+                                {formatTime(time)}
                                 <span className="delete-icon" onClick={() => setTimes(times.filter((_, i) => i !== index))}>×</span>
                             </li>
                         ))}
@@ -288,7 +235,6 @@ const AvailableTimesForm = ({ onSaveTimes, onDeleteTimes, availableTimes, select
                 {menuTemplate && (
                     <div className="menu-popup" ref={menuRef}>
                         <button onClick={() => handleMenuAction('Use')}>Use</button>
-                        <button onClick={() => handleMenuAction('Edit')}>Edit</button>
                         <button onClick={() => handleMenuAction('Delete')}>Delete</button>
                     </div>
                 )}
